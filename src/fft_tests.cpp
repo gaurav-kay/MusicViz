@@ -44,7 +44,7 @@ int main() {
 
 	constexpr std::int16_t AMPLITUDE = 30000;
 	constexpr double TWO_PI = 6.28318;
-	constexpr double increment = 4410 / 44100.0;
+	constexpr double increment = 1000 / 44100.0;
 	double x = 0.0;
 	for (std::size_t i = 0; i < SAMPLES; ++i) {
 		raw[i] = static_cast<std::int16_t>(AMPLITUDE * sin(x * TWO_PI));
