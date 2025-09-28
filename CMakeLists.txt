@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 project(MusicViz)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_BUILD_TYPE Debug)
 # set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 #include(FetchContent)
@@ -13,7 +14,7 @@ set(CMAKE_CXX_STANDARD 20)
 #        SYSTEM)
 #FetchContent_MakeAvailable(SFML)
 
-add_executable(MusicViz src/fft_tests.cpp)
+add_executable(MusicViz src/fft_from_file.cpp)
 #target_compile_features(MusicViz PRIVATE cxx_std_17)
 #target_link_libraries(MusicViz PRIVATE SFML::Graphics)
 
