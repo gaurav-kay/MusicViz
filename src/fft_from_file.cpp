@@ -16,7 +16,7 @@ int main() {
     int sampleRate = buffer.getSampleRate();
     // int sampleCount = buffer.getSampleCount();
     // int sampleCount = 1 * sampleRate;
-    int sampleCount = 5 * sampleRate;  // 10 sec
+    int sampleCount = 15 * sampleRate;  // 10 sec
     const sf::Int16 *samples_ptr = buffer.getSamples() + 44100;  // 1 sec headstart
     std::vector<sf::Int16> samples;
     const float window_length_in_seconds = 0.1;
