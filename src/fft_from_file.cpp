@@ -6,6 +6,23 @@
 #include <fftw3.h>
 #include <thread>
 
+void play_window(std::vector<sf::Int16> &samples, int SAMPLE_RATE) {
+    sf::SoundBuffer buffer{};
+	if (!buffer.loadFromSamples(samples.data(), samples.size(), 1, SAMPLE_RATE))
+	{
+		std::cerr << "Loading failed!" << std::endl;
+        exit(-1);
+    }
+
+    // std::cout << "playing original\n";
+	sf::Sound sound(buffer);
+	// sound.setLoop(true);
+	sound.play();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));  // todo: make sleep for float seconds/int milliseconds etc
+
+}
+
 int main() {
     sf::SoundBuffer buffer;
     if (!buffer.loadFromFile("ergo_proxy_whispa.ogg")) {
@@ -26,10 +43,13 @@ int main() {
 
     fftw_plan plan_forward = fftw_plan_dft_r2c_1d(samples_norm.size(), samples_norm.data(), out_complex.data(), FFTW_ESTIMATE);
 
+
     int count = 0;
     // while (samples_ptr + window_length < samples_ptr + sampleCount) {
     while (count + window_length < sampleCount) {  // not correct logic
         samples.assign(samples_ptr + count, samples_ptr + count + window_length);
+
+        play_window(samples, sampleRate);
 
         for (size_t i = 0; i < samples.size(); i++) {
             samples_norm[i] = samples[i] / (double) std::numeric_limits<sf::Int16>::max();
@@ -37,13 +57,13 @@ int main() {
 
         fftw_execute(plan_forward);
 
-        for (size_t i = 0; i < window_length; i++) {
-            std::cout << 
-                count << "," << 
-                i << "," <<
-                out_complex[i][0] << "," << 
-                out_complex[i][1] << std::endl;
-        }
+        // for (size_t i = 0; i < window_length; i++) {
+        //     std::cout << 
+        //         count << "," << 
+        //         i << "," <<
+        //         out_complex[i][0] << "," << 
+        //         out_complex[i][1] << std::endl;
+        // }
 
         count += (window_length * 1);
     }
