@@ -14,6 +14,7 @@ struct data {
     double freq;
     double mag;
     double mel;
+    int mel_idx;
 };
 
 
@@ -22,9 +23,11 @@ int main() {
     // use a custom stream class in the future, to only load chunk of data and fft on that chunk only. reducing memory usage
     // https://www.sfml-dev.org/documentation/3.0.2/classsf_1_1SoundStream.html#:~:text=data%20between%20threads.-,Usage%20example,-%3A
     
-    // std::string filename = "../audio/freq_slide.ogg";
+    // std::string filename = "../audio/jingle.ogg";
     // std::string filename = "../audio/flume_skin_preview.ogg";
-    std::string filename = "../audio/ergo_proxy_whispa.ogg";
+    // std::string filename = "../audio/flume_skin_preview_2.ogg";
+    std::string filename = "../audio/flume_skin_preview_full.ogg";
+    // std::string filename = "../audio/ergo_proxy_whispa.ogg";
 
     sf::SoundBuffer buffer;
     if (!buffer.loadFromFile(filename)) {
@@ -39,7 +42,7 @@ int main() {
     const sf::Int16 *samples_ptr = buffer.getSamples();
     // const sf::Int16 *samples_ptr = buffer.getSamples() + sampleRate;  // 1 sec headstart
     const float sample_window_length_in_seconds = 0.1;
-    const auto display_update_frequency_in_ms = 100;
+    const auto display_update_frequency_in_ms = 20;
     const int sample_window_length = sample_rate * sample_window_length_in_seconds;
     std::vector<fftw_complex> out_complex(sample_window_length);
     std::vector<double> samples_norm(sample_window_length);
@@ -49,7 +52,7 @@ int main() {
 
     sf::RenderWindow window(sf::VideoMode(2000, 600), "My window");
     window.setFramerateLimit(200);
-    window.setVerticalSyncEnabled(true);  // v imp
+    // window.setVerticalSyncEnabled(true);  // v imp -> maybe not
 
     sf::Sound music(buffer);
     music.setVolume(20.0);
@@ -76,8 +79,6 @@ int main() {
         }
 
         currentTick = (long long) (currPos / display_update_frequency_in_ms);
-
-        // if ((currPos - startPos) / display_update_frequency_in_ms < tick) {
         if (currentTick <= prevTick) {
             // sf::sleep(sf::milliseconds(5)); 
             window.display();
@@ -89,7 +90,7 @@ int main() {
 
         long sample_position = (currPos / 1000.0) * sample_rate * channel_count;
         // long sample_position = tick * sample_rate / display_update_frequency_in_ms;
-        std::cout << "currPos in ms: " << currPos / 1000.0 << " sample_pos: " << sample_position << " to " << sample_position + sample_window_length << "\n";  // << " new_calc: " << tick * sample_rate / display_update_frequency_in_ms << "\n";
+        // std::cout << "currPos in ms: " << currPos / 1000.0 << " sample_pos: " << sample_position << " to " << sample_position + sample_window_length << "\n";  // << " new_calc: " << tick * sample_rate / display_update_frequency_in_ms << "\n";
         // samples.assign(samples_ptr + sample_position, samples_ptr + sample_position + sample_window_length);
         for (int i = 0; i < sample_window_length; i++) {
            samples[i] = samples_ptr[sample_position + i * channel_count];
@@ -97,7 +98,7 @@ int main() {
 
         // for (size_t i = 0; i < samples.size(); i++) {
         for (size_t i = 0; i < sample_window_length; i++) {
-            samples_norm[i] = samples[i] / (double) std::numeric_limits<sf::Int16>::max();
+            samples_norm[i] = samples[i] / (double) std::numeric_limits<sf::Int16>::max();  // -32,768 to 32,767 -> signed short
             // samples_norm[i] = samples[i] / (double) *std::max_element(samples.begin(), samples.end());
         }
 
@@ -107,16 +108,67 @@ int main() {
             output[i].idx = (i + 1);
             output[i].freq = 44100 * i / sample_window_length;
             output[i].mag = sqrt(out_complex[i][0] * out_complex[i][0] + out_complex[i][1] * out_complex[i][1]);
+
+            if (output[i].freq < 1000) {
+                output[i].mel = 3 * output[i].freq / 200.0;
+                output[i].mel_idx = std::floor(output[i].mel * 10);
+            } else {
+                double mel = output[i].freq / 1000.0;
+                mel = log(mel) / log(6.4);
+                output[i].mel = 15 + 27 * mel;
+                output[i].mel_idx = std::floor(output[i].mel * 10);
+            }
         }
 
+        // approach:
+        // mel * 10, so min and max will be: max mel = 70.0711, so max mapped x axis value will be 700.
+
+        // bin and aggregate mel_idx
+        std::vector<double> output_data_xy(600, 0);
+        for (auto i: output) {
+            output_data_xy[i.mel_idx] += i.mag;
+        }
+
+        // int z = 1;
+        // if (z && sample_position > 301026) {
+        //     std::cout << "freq,mag,mel\n";
+        //     for (auto m: output) {
+        //         std::cout << m.freq << "," << m.mag << "," << m.mel << "\n";
+        //     }
+        //     exit(0);
+        // }
+
         line.clear();
-        for (auto i : output) {
+        // for (auto i : output) {
+        //     line.push_back(
+        //         sf::Vertex{
+        //             sf::Vector2f(
+        //                 (i.idx / sample_window_length) * window.getSize().x * 4, // this is correct. i think x2 cus output of FFT half is missing. and x4 cus only 1st half is significant
+
+        //                 i.mag * 5.0f
+        //                 // i.mel
+        //             )
+        //         }
+        //     );
+        // }
+
+        // int z = 1;
+        // if (z && sample_position > 301026) {
+        //     std::cout << "pos,x,y\n";
+        //     for (int i = 0; i < output_data_xy.size(); i++) {
+        //         // std::cout << i << " " << output_data_xy.size() << " " << window.getSize().x << " " << 
+        //         std::cout << (int) ((i / (double) output_data_xy.size()) * window.getSize().x)
+        //          << "," << i << "," << output_data_xy[i] << "\n";
+        //     }
+        //     exit(0);
+        // }
+
+        for (int i = 0; i < output_data_xy.size(); i++) {
             line.push_back(
                 sf::Vertex{
                     sf::Vector2f(
-                        (i.idx / sample_window_length) * window.getSize().x * 4, // this is correct. i think x2 cus output of FFT half is missing. and x4 cus only 1st half is significant
-
-                        i.mag * 5.0f
+                        (int) ((i / (double) output_data_xy.size()) * window.getSize().x),
+                        output_data_xy[i]
                     )
                 }
             );
