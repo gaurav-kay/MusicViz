@@ -25,8 +25,10 @@ int main() {
     
     // std::string filename = "../audio/jingle.ogg";
     // std::string filename = "../audio/flume_skin_preview.ogg";
-    // std::string filename = "../audio/flume_skin_preview_2.ogg";
-    std::string filename = "../audio/flume_skin_preview_full.ogg";
+    std::string filename = "../audio/flume_skin_preview_2.ogg";
+    // std::string filename = "../audio/flume_skin_preview_full.ogg";
+    // std::string filename = "../audio/peekaboo.ogg";
+    // std::string filename = "../audio/joshpan.ogg";
     // std::string filename = "../audio/ergo_proxy_whispa.ogg";
 
     sf::SoundBuffer buffer;
@@ -89,14 +91,11 @@ int main() {
         window.clear(sf::Color::Black);
 
         long sample_position = (currPos / 1000.0) * sample_rate * channel_count;
-        // long sample_position = tick * sample_rate / display_update_frequency_in_ms;
-        // std::cout << "currPos in ms: " << currPos / 1000.0 << " sample_pos: " << sample_position << " to " << sample_position + sample_window_length << "\n";  // << " new_calc: " << tick * sample_rate / display_update_frequency_in_ms << "\n";
-        // samples.assign(samples_ptr + sample_position, samples_ptr + sample_position + sample_window_length);
+        sample_position -= sample_window_length * channel_count / 2;  // centered at cursor
         for (int i = 0; i < sample_window_length; i++) {
            samples[i] = samples_ptr[sample_position + i * channel_count];
         }
 
-        // for (size_t i = 0; i < samples.size(); i++) {
         for (size_t i = 0; i < sample_window_length; i++) {
             samples_norm[i] = samples[i] / (double) std::numeric_limits<sf::Int16>::max();  // -32,768 to 32,767 -> signed short
             // samples_norm[i] = samples[i] / (double) *std::max_element(samples.begin(), samples.end());
