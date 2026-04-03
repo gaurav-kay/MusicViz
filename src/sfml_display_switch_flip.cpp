@@ -25,11 +25,13 @@ int main() {
     
     // std::string filename = "../audio/jingle.ogg";
     // std::string filename = "../audio/flume_skin_preview.ogg";
-    std::string filename = "../audio/flume_skin_preview_2.ogg";
+    // std::string filename = "../audio/flume_skin_preview_2.ogg";
+    // std::string filename = "../audio/ruffsqwad.ogg";
+    // std::string filename = "../audio/cokestudio.ogg";
     // std::string filename = "../audio/flume_skin_preview_full.ogg";
     // std::string filename = "../audio/peekaboo.ogg";
     // std::string filename = "../audio/joshpan.ogg";
-    // std::string filename = "../audio/ergo_proxy_whispa.ogg";
+    std::string filename = "../audio/ergo_proxy_whispa.ogg";
 
     sf::SoundBuffer buffer;
     if (!buffer.loadFromFile(filename)) {
@@ -42,9 +44,9 @@ int main() {
     int channel_count = buffer.getChannelCount();
     // int sampleCount = 2 * sampleRate;  // sec
     const sf::Int16 *samples_ptr = buffer.getSamples();
-    // const sf::Int16 *samples_ptr = buffer.getSamples() + sampleRate;  // 1 sec headstart
-    const float sample_window_length_in_seconds = 0.1;
-    const auto display_update_frequency_in_ms = 20;
+    // const sf::Int16 *samples_ptr = buffer.getSamples() + 40 * channel_count * sample_rate;  // 1 sec headstart
+    const float sample_window_length_in_seconds = 0.05;
+    const auto display_update_frequency_in_ms = 20;  // imp to have this and sample_window_length in relative sync, disp > window_length maybe
     const int sample_window_length = sample_rate * sample_window_length_in_seconds;
     std::vector<fftw_complex> out_complex(sample_window_length);
     std::vector<double> samples_norm(sample_window_length);
@@ -52,12 +54,12 @@ int main() {
 
     fftw_plan plan_forward = fftw_plan_dft_r2c_1d(samples_norm.size(), samples_norm.data(), out_complex.data(), FFTW_ESTIMATE);
 
-    sf::RenderWindow window(sf::VideoMode(2000, 600), "My window");
+    sf::RenderWindow window(sf::VideoMode(2000, 600), "Music Visualizer");
     window.setFramerateLimit(200);
     // window.setVerticalSyncEnabled(true);  // v imp -> maybe not
 
     sf::Sound music(buffer);
-    music.setVolume(20.0);
+    music.setVolume(50.0);
     music.play();
 
     // allocations:
@@ -108,6 +110,11 @@ int main() {
             output[i].freq = 44100 * i / sample_window_length;
             output[i].mag = sqrt(out_complex[i][0] * out_complex[i][0] + out_complex[i][1] * out_complex[i][1]);
 
+            // double max_mag = sample_window_length * std::numeric_limits<sf::Int16>::max();
+            // output[i].mag = output[i].mag * 100000 / max_mag;
+            // output[i].mag = output[i].mag / sample_window_length;
+            // output[i].mag = log1p(output[i].mag);
+
             if (output[i].freq < 1000) {
                 output[i].mel = 3 * output[i].freq / 200.0;
                 output[i].mel_idx = std::floor(output[i].mel * 10);
@@ -124,15 +131,27 @@ int main() {
 
         // bin and aggregate mel_idx
         std::vector<double> output_data_xy(600, 0);
+        std::vector<int> output_data_xy_number_of_bins(600, 0);
         for (auto i: output) {
-            output_data_xy[i.mel_idx] += i.mag;
+            if (i.mel_idx < output_data_xy.size()) {
+                output_data_xy[i.mel_idx] += i.mag;
+                output_data_xy_number_of_bins[i.mel_idx] += 1;
+            }
+        }
+
+        // avg the mel bins
+        for (size_t i = 0; i < output_data_xy.size(); i++) {
+            if (output_data_xy_number_of_bins[i] > 0) {
+                output_data_xy[i] = output_data_xy[i] / (double) output_data_xy_number_of_bins[i];
+            }
         }
 
         // int z = 1;
         // if (z && sample_position > 301026) {
         //     std::cout << "freq,mag,mel\n";
-        //     for (auto m: output) {
-        //         std::cout << m.freq << "," << m.mag << "," << m.mel << "\n";
+        //     for (int i = 0; i < output_data_xy.size(); i++) {
+        //         // std::cout << m.freq << "," << m.mag << "," << m.mel << "\n";
+        //         std::cout << i << "," << output_data_xy[i] << "," << output_data_xy_number_of_bins[i] << "," << output_data_xy[i] / (double) output_data_xy_number_of_bins[i] << "\n";
         //     }
         //     exit(0);
         // }
@@ -167,7 +186,7 @@ int main() {
                 sf::Vertex{
                     sf::Vector2f(
                         (int) ((i / (double) output_data_xy.size()) * window.getSize().x),
-                        output_data_xy[i]
+                        window.getSize().y - output_data_xy[i]
                     )
                 }
             );
