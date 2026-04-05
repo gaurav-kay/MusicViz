@@ -31,7 +31,7 @@ int main() {
     int channel_count = buffer.getChannelCount();
     const std::int16_t *samples_ptr = buffer.getSamples();
     const float sample_window_length_in_seconds = 0.05;
-    const auto display_update_frequency_in_ms = 20;  // imp to have this and sample_window_length in relative sync, disp > window_length maybe
+    const auto display_update_frequency_in_ms = 20;  // imp to have this and sample_window_length in relative sync, disp > window_length
     const int sample_window_length = sample_rate * sample_window_length_in_seconds;
     std::vector<fftw_complex> out_complex(sample_window_length);
     std::vector<double> samples_norm(sample_window_length);
@@ -69,7 +69,6 @@ int main() {
 
         currentTick = (long long) (currPos / display_update_frequency_in_ms);
         if (currentTick <= prevTick) {
-            // sf::sleep(sf::milliseconds(5)); 
             window.display();
             continue;
         } 
