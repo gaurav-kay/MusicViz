@@ -3,11 +3,9 @@
 #include <vector>
 #include <limits>
 #include <fftw3.h>
-#include <thread>
 #include <iostream>
 #include <math.h>
 #include <algorithm>
-#include <thread>
 #include <optional>
 
 struct data {
