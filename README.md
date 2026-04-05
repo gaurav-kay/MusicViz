@@ -2,6 +2,8 @@
 
 A simple Music Visualizer (like the ones on YouTube) that shows the Magnitude Spectrum over Mel frequencies written in C++. 
 
+![Music Visualizer](audio/output.gif)
+
 ## Description
 
 This project uses SFML 3 to read audio files, and performs a simple FFT every 20ms or so, to compute the frequency domain magnitude of the music sample. The linear frequency spectrum is then converted to the Mel scale to better represent human hearing. The resulting magnitudes are binned and plotted against Mel frequency bands to generate the visualization
@@ -21,10 +23,6 @@ This project uses SFML 3 to read audio files, and performs a simple FFT every 20
 - `cd build`
 - `make`
 - `./MusicViz`
-
-### Example Run
-
-![Music Visualizer](audio/output.gif)
 
 ### Improvements
 - File selection
