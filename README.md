@@ -1,6 +1,6 @@
 # Music Visualizer
 
-A simple Music Visualizer that is shows the Magnitude Spectrum over Mel frequencies written in C++. 
+A simple Music Visualizer (like the ones on YouTube) that shows the Magnitude Spectrum over Mel frequencies written in C++. 
 
 ## Description
 
