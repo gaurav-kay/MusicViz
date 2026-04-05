@@ -20,16 +20,7 @@ struct data {
 
 
 int main() {
-    // std::string filename = "../audio/jingle.ogg";
-    // std::string filename = "../audio/flume_skin_preview.ogg";
-    // std::string filename = "../audio/flume_skin_preview_2.ogg";
-    // std::string filename = "../audio/ruffsqwad.ogg";
-    std::string filename = "../audio/cokestudio.ogg";
-    // std::string filename = "../audio/flume_skin_preview_full.ogg";
-    // std::string filename = "../audio/peekaboo.ogg";
-    // std::string filename = "../audio/joshpan.ogg";
-    // std::string filename = "../audio/ergo_proxy_whispa.ogg";
-    // std::string filename = "../audio/Are_We_Dreaming_peekaboo.mp3";
+    std::string filename = "../audio/oshi - pink.mp3";
 
     sf::SoundBuffer buffer;
     if (!buffer.loadFromFile(filename)) {
@@ -50,12 +41,13 @@ int main() {
 
     fftw_plan plan_forward = fftw_plan_dft_r2c_1d(samples_norm.size(), samples_norm.data(), out_complex.data(), FFTW_ESTIMATE);
 
-    sf::RenderWindow window(sf::VideoMode({2000, 600}), "Music Visualizer");
+    sf::RenderWindow window(sf::VideoMode({1500, 450}), "Music Visualizer");
+    window.setPosition({100, 100});
     window.setFramerateLimit(200);
     window.setVerticalSyncEnabled(true);
 
     sf::Music music(filename);
-    music.setVolume(50.0);
+    // music.setVolume(50.0);
     music.play();
 
     // allocations:

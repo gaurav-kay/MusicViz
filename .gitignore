@@ -5,5 +5,3 @@ cmake-build-debug/
 .idea/
 build/
 frames/
-sfml3/
-tmp/
