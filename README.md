@@ -24,8 +24,10 @@ This project uses SFML 3 to read audio files, and performs a simple FFT every 20
 - `make`
 - `./MusicViz`
 
-### Improvements
+## Improvements
 - File selection
 - Smoother lines
 - Add weighted movement of the lines, and use RGB for different weights
 - Normalize Y axis
+- Find different X axis scaling, apart from Mel frequencies
+- Seeking/Scrubbing controls for the track

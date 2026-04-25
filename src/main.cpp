@@ -17,12 +17,39 @@ struct data {
 };
 
 
+std::string to_string(const std::filesystem::file_time_type& ftime)
+{
+#if __cpp_lib_format
+    return std::format("{:%c}", ftime);
+#else
+    std::time_t cftime = std::chrono::system_clock::to_time_t(
+        std::chrono::file_clock::to_sys(ftime));
+    std::string str = std::asctime(std::localtime(&cftime));
+    str.pop_back(); // rm the trailing '\n' put by `asctime`
+    return str;
+#endif
+}
+
 int main() {
     std::string filename = "../audio/oshi - pink.mp3";
+    std::string audio_dir = "../audio/";
+    std::filesystem::file_time_type newest_t = std::filesystem::file_time_type::min();
+
+    for (auto const& dir_entry : std::filesystem::directory_iterator(audio_dir)) {
+        if (dir_entry.last_write_time() > newest_t) {
+            // filename = dir_entry.path();
+            newest_t = dir_entry.last_write_time();
+        }
+    }
+
+    if (newest_t == std::filesystem::file_time_type::min()) {
+        std::cout << "No valid audio file found in '../audio/'\n";
+        return 0;
+    }
 
     sf::SoundBuffer buffer;
     if (!buffer.loadFromFile(filename)) {
-        printf("unable to load");
+        std::cout << "Unable to load: " << filename << "\n";
         return -1;
     }
 
@@ -31,7 +58,7 @@ int main() {
     int channel_count = buffer.getChannelCount();
     const std::int16_t *samples_ptr = buffer.getSamples();
     const float sample_window_length_in_seconds = 0.05;
-    const auto display_update_frequency_in_ms = 20;  // imp to have this and sample_window_length in relative sync, disp > window_length
+    const auto display_update_frequency_in_ms = 20;  // imp to have this and sample_window_length in relative sync, disp <= window_length
     const int sample_window_length = sample_rate * sample_window_length_in_seconds;
     std::vector<fftw_complex> out_complex(sample_window_length);
     std::vector<double> samples_norm(sample_window_length);
@@ -90,9 +117,10 @@ int main() {
 
         for (size_t i = 0; i < sample_window_length; i++) {
             output[i].idx = (i + 1);
-            output[i].freq = 44100 * i / sample_window_length;
+            output[i].freq = sample_rate * i / sample_window_length;
             output[i].mag = sqrt(out_complex[i][0] * out_complex[i][0] + out_complex[i][1] * out_complex[i][1]);
 
+            // mel conversion formula
             if (output[i].freq < 1000) {
                 output[i].mel = 3 * output[i].freq / 200.0;
                 output[i].mel_idx = std::floor(output[i].mel * 10);
